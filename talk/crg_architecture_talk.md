@@ -192,12 +192,12 @@ static const CapabilityBinding<Scout, Diagnostic> g_ScoutDiag;
 graph LR
     D["Scout.h"] --- B["Binding"]
     L["Diag.cpp"] --- B
-    B -- "Resolved at runtime" --> G["Gateway"]
+    B -- "Resolved at runtime" --> G["Grid"]
 ```
 ## EN
-Data, Logic, and Binding are orthogonal dimensions that never include each other. The Gateway resolves them at runtime through the baked matrix. You can add a new capability by dropping a new .cpp file with a static binding. We compose systems at link time, not at compile time.
+Data, Logic, and Binding are orthogonal dimensions that never include each other. The Grid resolves them at runtime through the baked matrix. You can add a new capability by dropping a new .cpp file with a static binding. We compose systems at link time, not at compile time.
 ## FR
-Maintenant on a les trois pièces. La donnée vit dans scout.h — état pur, aucune dépendance. La logique vit dans DiagnosticCapability. Et le binding est un simple statique qui relie les deux. Ces trois fichiers ne s'incluent jamais mutuellement. Le Gateway effectue le routage au runtime à travers la matrice baked. Vous pouvez ajouter une capability pour Scout en déposant un nouveau .cpp sans toucher au reste. C'est ce qui tue le Build Wall. Donnée, Logique et Binding sont trois dimensions orthogonales. On les compose au moment du link, pas à la compilation.
+Maintenant on a les trois pièces. La donnée vit dans scout.h — état pur, aucune dépendance. La logique vit dans DiagnosticCapability. Et le binding est un simple statique qui relie les deux. Ces trois fichiers ne s'incluent jamais mutuellement. Le Grid effectue le routage au runtime à travers la matrice baked. Vous pouvez ajouter une capability pour Scout en déposant un nouveau .cpp sans toucher au reste. C'est ce qui tue le Build Wall. Donnée, Logique et Binding sont trois dimensions orthogonales. On les compose au moment du link, pas à la compilation.
 
 # SLIDE: 07 - THE OOP ILLUSION (Invoke / TryInvoke)
 ## Code

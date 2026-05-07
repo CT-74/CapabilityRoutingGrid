@@ -1,4 +1,4 @@
-# Capability Routing Gateway (CRG)
+# Capability Routing Grid (CRG)
 
 **Reaching the Hardware Limit: Universal Decoupling and Zero-Cost Capability Routing in C++**
 
@@ -172,4 +172,4 @@ The `demo/` folder contains 12 stages, each building on the previous:
 **Author:** Cyril Tissier  
 **License:** Apache 2.0  
 
-**Legal Disclaimer:** *This repository represents independent research and a clean-room implementation of the Capability Routing Gateway architecture. All code and documentation were developed personally by the author. This project is independent of, and does not contain any proprietary or confidential information from, any past or present employer.*
+**Legal Disclaimer:** *This repository represents independent research and a clean-room implementation of the Capability Routing Grid architecture. All code and documentation were developed personally by the author. This project is independent of, and does not contain any proprietary or confidential information from, any past or present employer.*

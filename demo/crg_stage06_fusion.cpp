@@ -133,7 +133,7 @@ struct CapabilityBinding<TypeList<Models...>, TCapabilities...> : public Capabil
 };
 
 // =============================================================================
-// 4. THE CAPABILITY ROUTER (High-Performance Gateway)
+// 4. THE CAPABILITY ROUTER (High-Performance Grid)
 // =============================================================================
 
 class CapabilityRouter {

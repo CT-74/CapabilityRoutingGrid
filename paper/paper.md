@@ -8,7 +8,7 @@
 
 ## 1. Abstract
 
-The **Capability Routing Gateway (CRG)** is a general-purpose architectural pattern designed to resolve the fundamental conflict between modular decoupling and hardware efficiency. By treating data and logic as two parallel dimensions—mirroring the L1I/L1D split of modern CPUs—CRG eliminates the "Virtual Deadlock" inherent in traditional object-oriented hierarchies. It provides a linker-driven, zero-allocation framework for any C++ system requiring decoupled module discovery and high-performance capability routing, from plugin-based tools to massive scale simulations.
+The **Capability Routing Grid (CRG)** is a general-purpose architectural pattern designed to resolve the fundamental conflict between modular decoupling and hardware efficiency. By treating data and logic as two parallel dimensions—mirroring the L1I/L1D split of modern CPUs—CRG eliminates the "Virtual Deadlock" inherent in traditional object-oriented hierarchies. It provides a linker-driven, zero-allocation framework for any C++ system requiring decoupled module discovery and high-performance capability routing, from plugin-based tools to massive scale simulations.
 
 CRG delivers three uncompromising guarantees: **Zero Coupling, Zero Search, and Zero Migration**.
 
@@ -104,4 +104,4 @@ Live++ patches function bodies in place. For topology changes, the developer tri
 **Author:** Cyril Tissier  
 **License:** Apache 2.0  
 
-**Legal Disclaimer:** *This repository represents independent research and a clean-room implementation of the Capability Routing Gateway architecture. All code and documentation were developed personally by the author. This project is independent of, and does not contain any proprietary or confidential information from, any past or present employer.*
+**Legal Disclaimer:** *This repository represents independent research and a clean-room implementation of the Capability Routing Grid architecture. All code and documentation were developed personally by the author. This project is independent of, and does not contain any proprietary or confidential information from, any past or present employer.*
