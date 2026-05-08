@@ -14,17 +14,22 @@ struct TraditionalObject {
 ## Mermaid
 ```mermaid
 graph LR
-    subgraph "SILICON (Hardware)"
-        L1I["L1 Instruction Cache"]
-        L1D["L1 Data Cache"]
+    subgraph HW["🔬 SILICON — Hardware"]
+        L1I["L1I\nInstruction Cache"]
+        L1D["L1D\nData Cache"]
     end
-    subgraph "CRG (Software Architecture)"
-        Logic["Stateless Behaviors"]
-        Data["Pure Data Models"]
+    subgraph SW["⚡ CRG — Software"]
+        Logic["Stateless\nBehaviors"]
+        Data["Pure Data\nModels"]
     end
-    L1I -.-> Logic
-    L1D -.-> Data
-    Logic --- Data
+    L1I -.->|mirrors| Logic
+    L1D -.->|mirrors| Data
+    style HW fill:#2a0a0a,color:#ff8866,stroke:#ff6644
+    style SW fill:#0a2a0a,color:#00ff88,stroke:#00ff88
+    style L1I fill:#3a1010,color:#ffaa88,stroke:#ff6644
+    style L1D fill:#3a1010,color:#ffaa88,stroke:#ff6644
+    style Logic fill:#103a10,color:#00ff88,stroke:#00ff88
+    style Data fill:#103a10,color:#00ff88,stroke:#00ff88
 ```
 ## EN
 If you look at the silicon of a modern CPU, the Level 1 cache is physically divided in two: the Data Cache (L1D) and the Instruction Cache (L1I). The hardware itself demands a strict separation between state and behavior to reach peak efficiency. Yet, for decades, we have forced them together in our objects. Stateless Behavior Projection is the answer. We stop fighting the hardware. We treat data and logic as two parallel dimensions — mirroring the silicon itself.
@@ -46,11 +51,15 @@ struct ConfigManager {
 ## Mermaid
 ```mermaid
 graph TD
-    CM["ConfigManager.h"] -- "Change" --> S1["ServiceLayer.h"]
-    S1 --> S2["DataPipeline.h"]
-    S2 --> S3["UIController.h"]
-    S3 --> S4["MainApp.cpp"]
-    style CM fill:#f00,color:#fff
+    CM["⚠️ ConfigManager.h\none bool changed"]:::red
+    CM --> S1["ServiceLayer.h"]
+    CM --> S2["DataPipeline.h"]
+    S1 --> S3["UIController.h"]
+    S2 --> S3
+    S3 --> END["MainApp.cpp\n+ 213 others"]
+    END --> T["⏱ 38 minutes\n217 files recompiled"]:::timer
+    classDef red fill:#8b0000,color:#fff,stroke:#ff0000,stroke-width:2px
+    classDef timer fill:#1a0000,color:#ff4444,stroke:#ff4444,stroke-width:2px
 ```
 ## EN
 You touch a header. One bool. You hit build. 38 minutes later, you're still waiting. That's Include Hell. It doesn't feel like a performance problem; it feels like a morale problem. But it's an architecture problem. Everything is entangled at compile time. CRG cuts that knot: how do you get behaviors to discover each other at link time, with zero shared headers?
@@ -73,15 +82,18 @@ static DroneBehavior g_drone; // OS loads DLL, constructor fires.
 ## Mermaid
 ```mermaid
 graph TD
-    subgraph "Engine Core (.exe)"
-        Slot["UniversalAnchor Anchor"]
+    subgraph MONO["✅ MONOLITHIC — static Meyers singleton"]
+        A1["UniversalAnchor::Get()\nstatic T s_Value"]:::mono
+        B1["DroneBehavior"] -->|"NodeList ctor"| A1
+        C1["TankBehavior"] -->|"NodeList ctor"| A1
     end
-    subgraph "DLL Module A"
-        Drone["DroneBehavior"] -- "Linker" --> Slot
+    subgraph DLL["🔌 DLL MODE — explicit anchor in core"]
+        A2["CRG_DEFINE_UNIVERSAL_ANCHOR\nengine core (.exe)"]:::dll
+        B2["Module A DLL"] -->|"linker resolves"| A2
+        C2["Module B DLL"] -->|"linker resolves"| A2
     end
-    subgraph "DLL Module B"
-        Tank["TankBehavior"] -- "Linker" --> Slot
-    end
+    classDef mono fill:#0a2a0a,color:#00ff88,stroke:#00ff88
+    classDef dll fill:#0a0a2a,color:#64a0ff,stroke:#64a0ff
 ```
 ## EN
 In production, you have modules registering capabilities without the core knowing they exist. CRG_DEFINE_UNIVERSAL_ANCHOR anchors the registry in the core, allowing DLLs to resolve to a single address via the linker. Define a struct, instantiate it as a static, and the OS fires the constructor on load. It's a fully functional plugin system obtained for free.
@@ -132,9 +144,20 @@ public:
 ## Mermaid
 ```mermaid
 graph LR
-    Data["Scout Data"] --> Shell["ModelShell Box"]
-    Shell -- "Opaque Transport" --> Logic["ScoutCapability"]
-    Logic -- "shell.Get Scout" --> Data
+    subgraph PROD["Producer — Gameplay"]
+        S["Scout\n{ callsign, health }"]
+        BOX["ModelShell\n🔒 Opaque"]
+        S -->|"type erased"| BOX
+    end
+    subgraph CONS["Consumer — Logic only"]
+        CAP["ScoutCapability"]
+        REC["shell.Get&lt;Scout&gt;()\nonly inside here"]
+        CAP -->|"static_cast"| REC
+    end
+    BOX -->|"crosses any boundary"| CAP
+    style PROD fill:#0a0a2a,stroke:#64a0ff,color:#64a0ff
+    style CONS fill:#0a2a0a,stroke:#00ff88,color:#00ff88
+    style BOX fill:#2a2a00,color:#ffff44,stroke:#ffff44
 ```
 ## EN
 ModelShell is a logic-empty shell that carries data and preserves identity across boundaries. The only job is data transport. It uses Small Buffer Optimization (SBO) to ensure zero heap allocation and fits within a cache line. The data recovery via Get<T>() only happens inside the behavior that knows the type. One practical note: a natvis is provided — in the debugger you see Scout{ callsign='Vanguard-01' }, not a void* and 48 bytes of hex.
@@ -159,14 +182,16 @@ const T& Get() const { ... } // Template Data Recovery
 ## Mermaid
 ```mermaid
 graph TD
-    subgraph "The Lock"
-        V["Virtual"] --> X["Error"]
-        T["Template"] --> X
+    subgraph LOCK["❌ The Virtual Deadlock — C++ forbids this"]
+        V["virtual method"] & TM["template method"] --> ERR["COMPILER ERROR\nvirtual template forbidden"]:::red
     end
-    subgraph "The Break"
-        ID["Virtual ID"] --- Recover["Template Recovery"]
-        Recover --> OK["Valid C++"]
+    subgraph BREAK["✅ ModelShell — The Break"]
+        ID["virtual GetID()\nidentity only"]:::ok
+        REC["template Get&lt;T&gt;()\nnon-virtual"]:::ok
+        ID & REC --> VALID["One virtual jump\nOne static_cast\nLock broken ✓"]:::ok
     end
+    classDef red fill:#8b0000,color:#fff,stroke:#ff0000,stroke-width:2px
+    classDef ok fill:#0d3b0d,color:#00ff88,stroke:#00ff88
 ```
 ## EN
 C++ forbids virtual template methods — the 'Virtual Deadlock'. ModelShell breaks this by splitting the concerns: one virtual method (GetID()) for identity, and a non-virtual template method (Get<T>()) for data recovery. One virtual jump to identify, one static_cast to recover. The lock is broken.
@@ -189,15 +214,27 @@ static const CapabilityBinding<Scout, Diagnostic> g_ScoutDiag;
 ```
 ## Mermaid
 ```mermaid
-graph LR
-    D["Scout.h"] --- B["Binding"]
-    L["Diag.cpp"] --- B
-    B -- "Resolved at runtime" --> G["Grid"]
+graph TB
+    subgraph DATA["📄 scout.h"]
+        D["struct Scout\npure state — no dependencies"]
+    end
+    subgraph LOGIC["⚙️ diag_capability.cpp"]
+        L["DiagCapability\npure logic — knows Scout + IDiagnostic"]
+    end
+    subgraph BIND["🔗 scout_bindings.cpp"]
+        B["CapabilityBinding&lt;Scout, DiagCapability&gt;\none static — self-registers"]
+    end
+    GW["Gateway resolves at runtime — they never include each other"]:::gw
+    D & L & B --> GW
+    style DATA fill:#0a0a2a,stroke:#64a0ff,color:#64a0ff
+    style LOGIC fill:#0a2a0a,stroke:#00ff88,color:#00ff88
+    style BIND fill:#1a1500,stroke:#ffaa00,color:#ffaa00
+    classDef gw fill:#1a1a1a,color:#888888,stroke:#555555
 ```
 ## EN
-Data, Logic, and Binding are orthogonal dimensions that never include each other. The Grid resolves them at runtime through the baked matrix. You can add a new capability by dropping a new .cpp file with a static binding. We compose systems at link time, not at compile time.
+Data, Logic, and Binding are orthogonal dimensions that never include each other. The Gateway resolves them at runtime through the baked matrix. You can add a new capability by dropping a new .cpp file with a static binding. We compose systems at link time, not at compile time.
 ## FR
-Maintenant on a les trois pièces. La donnée vit dans scout.h — état pur, aucune dépendance. La logique vit dans DiagnosticCapability. Et le binding est un simple statique qui relie les deux. Ces trois fichiers ne s'incluent jamais mutuellement. Le Grid effectue le routage au runtime à travers la matrice baked. Vous pouvez ajouter une capability pour Scout en déposant un nouveau .cpp sans toucher au reste. C'est ce qui tue le Build Wall. Donnée, Logique et Binding sont trois dimensions orthogonales. On les compose au moment du link, pas à la compilation.
+Maintenant on a les trois pièces. La donnée vit dans scout.h — état pur, aucune dépendance. La logique vit dans DiagnosticCapability. Et le binding est un simple statique qui relie les deux. Ces trois fichiers ne s'incluent jamais mutuellement. Le Gateway effectue le routage au runtime à travers la matrice baked. Vous pouvez ajouter une capability pour Scout en déposant un nouveau .cpp sans toucher au reste. C'est ce qui tue le Build Wall. Donnée, Logique et Binding sont trois dimensions orthogonales. On les compose au moment du link, pas à la compilation.
 
 # SLIDE: 07 - THE OOP ILLUSION (Invoke / TryInvoke)
 ## Code
@@ -213,15 +250,21 @@ shell.Invoke<&IMovement::Move>(ctx);
 ```
 ## Mermaid
 ```mermaid
-sequenceDiagram
-    participant User
-    participant Shell
-    participant Router
-    participant Logic
-    User->>Shell: "Invoke"
-    Shell->>Router: "GetID()"
-    Router-->>Shell: "Ptr"
-    Shell->>Logic: "Direct Call"
+graph TD
+    subgraph COLD["✅ COLD PATH — tools, UI, one-off queries"]
+        A["shell.Invoke&lt;&IMovement::Move&gt;(ctx)"]:::cold
+        B["compile-time: extract IMovement interface"]:::cold
+        C["one virtual jump  →  O(1) tensor lookup"]:::cold
+        D["direct call — result returned"]:::cold
+        A --> B --> C --> D
+    end
+    subgraph HOT["❌ NEVER IN HOT LOOPS"]
+        E["for 100k entities\n  shell.Invoke&lt;...&gt;(ctx)"]:::hot
+        F["= 100,000 virtual calls / frame"]:::hot
+        E --> F
+    end
+    classDef cold fill:#0a2a0a,color:#00ff88,stroke:#00ff88
+    classDef hot fill:#2a0a0a,color:#ff4444,stroke:#ff0000,stroke-width:2px
 ```
 ## EN
 Invoke and TryInvoke provide an OOP illusion for the cold path. The method pointer is analyzed at compile time to extract the interface and validate the signature. It pays one virtual call to recover the type, then jumps into the tensor. Use it for queries, never in a hot loop.
@@ -261,7 +304,17 @@ for (const auto* node : RouterSlot::Get()) {
 ## Mermaid
 ```mermaid
 graph LR
-    Search["O(N) Search"] -- "Too slow for 100k" --> Target["O(1) Array Access"]
+    subgraph WIN["✅ What Act I gave us"]
+        A["One static Baker\nZero boilerplate\nFree self-registration"]:::win
+    end
+    subgraph COST["❌ Hot path reality"]
+        B["Find() = O(N) search\n100k entities × N models × 60fps\nBottleneck moved, not fixed"]:::cost
+    end
+    WIN -->|"creates new bottleneck"| COST
+    COST -->|"we need"| TARGET["s_Tensor[denseID][offset]\nZero search. Pure math."]:::target
+    classDef win fill:#0a2a0a,color:#00ff88,stroke:#00ff88
+    classDef cost fill:#2a0a0a,color:#ff4444,stroke:#ff0000
+    classDef target fill:#0a0a2a,color:#64a0ff,stroke:#64a0ff,stroke-width:2px
 ```
 ## EN
 The Binding is elegant, but Find() is still O(N) over the number of registered models. For 100k entities, this is a bottleneck. We need pure math: compute an offset and jump. But hashes can't be array indices. We need to collapse the sparse ID universe.
@@ -407,12 +460,19 @@ world_state = State::Combat; // matrix: unchanged.
 ## Mermaid
 ```mermaid
 graph LR
-    subgraph "Mutable (Chaos)"
-        E1["Entity"] -- "Rewire" --> B1["New Behavior"]
+    subgraph MUT["❌ Mutable Topology"]
+        E1["Entity"]
+        E1 -->|"Add behavior"| B1["new ptr"]:::red
+        E1 -->|"Remove behavior"| B2["old ptr deleted"]:::red
+        B1 & B2 --> PF1["Prefetcher ❌\nlost stream\ncache penalty every transition"]:::red
     end
-    subgraph "Immutable (CRG)"
-        E2["Entity"] -- "Coord Update" --> Matrix["Tensor Matrix"]
+    subgraph IMM["✅ Immutable — CRG"]
+        E2["Entity"] --> CO["coordinate update\nworld_state = Combat"]
+        CO --> MT["Tensor Matrix\nnever moves"]:::imm
+        MT --> PF2["Prefetcher ✅\nstream intact\nzero structural cost"]:::imm
     end
+    classDef red fill:#2a0a0a,color:#ff4444,stroke:#ff0000
+    classDef imm fill:#0a2a0a,color:#00ff88,stroke:#00ff88
 ```
 ## EN
 In a mutable topology, behavior changes are structural operations that break the CPU prefetcher. In CRG, the matrix is frozen. A behavior transition is just a coordinate update. The memory addresses never change, so the prefetcher never loses its stream. Immutability is a performance guarantee.
@@ -636,8 +696,12 @@ graph LR
 ```
 ## EN
 In DLL mode you call Bake() manually at your controlled sync point after LoadLibrary(). The lazy init is the default for monolithic builds. For plugins and hot-reload, the sync point is yours to own — intentional. You decide when the matrix rebuilds.
+
+One constraint for explicit-link DLLs: they may only provide new implementations for contracts already known to the host executable. A DLL introducing a brand-new contract type is out of scope for this version — the host cannot dispatch to a type it does not know at compile time, regardless of the plugin system used. This is a fundamental C++ type-system boundary, not a CRG limitation.
 ## FR
 En mode DLL, vous appelez Bake() manuellement à votre point de synchro après LoadLibrary(). L'initialisation paresseuse est le défaut pour les builds monolithiques. Pour les plugins et le hot-reload, c'est à vous de gérer le point de synchro. Vous décidez quand la matrice se reconstruit, évitant les problèmes de thread-safety.
+
+Une contrainte pour les DLLs en explicit link : elles ne peuvent fournir que de nouvelles implémentations pour des contrats déjà connus de l'exécutable hôte. Une DLL qui introduit un tout nouveau type de contrat est hors scope pour cette version — l'hôte ne peut pas dispatcher vers un type qu'il ne connaît pas à compile time, quel que soit le système de plugin utilisé. C'est une limite fondamentale du système de types C++, pas une limitation de CRG.
 
 # SLIDE: 27 - Q&A: ActiveCapability [BACKUP]
 ## Code
